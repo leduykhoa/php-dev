@@ -1,0 +1,161 @@
+version: "3.5"
+services:
+
+  php-dev_nginx:
+    container_name: php-dev_nginx
+    image: nginx
+    networks:
+      - php-dev_network
+    ports:
+      - ${NGINX_PORT_PUBLIC}:80
+      - ${NGINX_PORT_PUBLIC_SSL}:443
+    volumes:
+      - ./nginx/configs/sites.conf:/etc/nginx/conf.d/sites.conf
+      - ./nginx-logs:/var/log/nginx
+      - ./ssl:/etc/letsencrypt
+
+  php-dev_sql:
+    container_name: php-dev-mysql
+    image: mysql:${MYSQL_VERSION:-latest}
+    restart: "no"
+    command: --lower_case_table_names=1 --sql_mode="ON"
+    networks:
+      - php-dev_network
+    volumes:
+      - ${MYSQL_PATH}/:/var/lib/mysql/
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ALLOW_EMPTY_PASSWORD: ${MYSQL_ALLOW_EMPTY_PASSWORD}
+      MYSQL_HOST: 0.0.0.0
+      
+  php-dev_pma:
+    container_name: php-dev-pma
+    image: phpmyadmin:5.2.0-apache
+    networks:
+      - php-dev_network
+    volumes:
+      - ./config.inc.php:/etc/phpmyadmin/config.inc.php
+    environment:
+      - PMA_ARBITRARY=1
+
+  php-dev_main:
+    container_name: php-dev-main
+    networks:
+      - php-dev_network
+    build:
+      context: "./php0801/"
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+    volumes:
+      - ./php0801/apache.conf:/etc/apache2/mods-enabled/apache.conf
+      - ./www:/var/www/html
+      - ./ssl:/etc/letsencrypt
+
+  php-dev:
+    container_name: php-dev
+    build:
+      context: "./apache/"
+      args:
+        PHP_VERSION: ${PHP_VERSION}
+    networks:
+      - php-dev_network
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf
+      - ./www:/var/www/html
+      - ./apache-logs:/var/log/apache
+    working_dir: /var/www/html
+    environment:
+      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+
+  php-dev_p0704:
+    container_name: p0704
+    networks:
+      - php-dev_network
+    build:
+      context: "./php0704/"
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+    volumes:
+      - ./php0704/apache.conf:/etc/apache2/mods-enabled/apache.conf
+      - ./www:/var/www/html
+      - ./ssl:/etc/letsencrypt
+
+  php-dev_p0800:
+    container_name: p0800
+    networks:
+      - php-dev_network
+    build:
+      context: "./php0800/"
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+    volumes:
+      - ./php0800/apache.conf:/etc/apache2/mods-enabled/apache.conf
+      - ./www:/var/www/html
+      - ./ssl:/etc/letsencrypt
+
+  la-ai:
+    container_name: dev-la-ai
+    build:
+      context: "./apache/"
+      args:
+        PHP_VERSION: ${PHP_VERSION}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - php-dev_network
+    volumes:
+      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf
+      - ./www/la-ai:/var/www/html
+      - ./apache-logs:/var/log/apache
+    working_dir: /var/www/html
+    environment:
+      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+      DB_HOST: php-dev-mysql
+      DB_PORT: 3306
+      DB_DATABASE: la-ai
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+  la-dev:
+    container_name: dev-la-dev
+    build:
+      context: "./apache/"
+      args:
+        PHP_VERSION: ${PHP_VERSION}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - php-dev_network
+    volumes:
+      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf
+      - ./www/la-dev:/var/www/html
+      - ./apache-logs:/var/log/apache
+    working_dir: /var/www/html
+    environment:
+      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+      DB_HOST: php-dev-mysql
+      DB_PORT: 3306
+      DB_DATABASE: la-dev
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+
+networks:
+  php-dev_network:
+    external:
+      name: php_dev_network
