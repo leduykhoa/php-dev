@@ -40,6 +40,9 @@ services:
       - ./config.inc.php:/etc/phpmyadmin/config.inc.php
     environment:
       - PMA_ARBITRARY=1
+      - MAX_EXECUTION_TIME=18000
+      - MEMORY_LIMIT=1024M
+      - UPLOAD_LIMIT=1024M
 
   php-dev_main:
     container_name: php-dev-main
