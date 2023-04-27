@@ -3,9 +3,8 @@
 echo "Bash version ${BASH_VERSION}..."
 
 set -e
-
-# a2enmod ssl
-# a2enmod proxy_fcgi setenvif
+a2enmod ssl
+a2enmod proxy_fcgi setenvif
 a2enmod rewrite
 # service apache2 start
 service apache2 restart
@@ -35,7 +34,12 @@ done
 echo 'ServerName 127.0.0.1' >> /etc/apache2/apache2.conf
 echo "AllowEncodedSlashes On" >> /etc/apache2/apache2.conf
 
+sed -ri 's/\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem/\/etc\/letsencrypt\/ssl-cert-os-main.pem/g' /etc/apache2/sites-available/default-ssl.conf
+sed -ri 's/\/etc\/ssl\/private\/ssl-cert-snakeoil.key/\/etc\/letsencrypt\/ssl-cert-os-main.key/g' /etc/apache2/sites-available/default-ssl.conf
+a2ensite default-ssl
+
 service apache2 reload
 service apache2 restart
+
 echo "Loading Docker System: ${DOCKER_SYSTEM}..."
 sleep infinity
