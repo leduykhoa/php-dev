@@ -201,31 +201,6 @@ services:
       DB_DATABASE: la-dev
       DB_USERNAME: root
       DB_PASSWORD: ${MYSQL_PASSWORD}
-  
-  ddtb:
-    container_name: ddtb
-    build:
-      context: "./apache/"
-      args:
-        PHP_VERSION: ${PHP_VERSION}
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    networks:
-      - php-dev_network
-    volumes:
-      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf      
-      - ./ssl/certbot/conf:/etc/letsencrypt
-      - ./apache-logs:/var/log/apache
-      - /working/www/checkvn/ddtb:/var/www/html
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-      DB_HOST: php-dev-mysql
-      DB_PORT: 3306
-      DB_DATABASE: ddtb
-      DB_USERNAME: root
-      DB_PASSWORD: ${MYSQL_PASSWORD}
 
 networks:
   php-dev_network:
