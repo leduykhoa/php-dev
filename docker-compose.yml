@@ -16,7 +16,7 @@ services:
       - main
       - pma
     volumes:
-      - ./nginx/configs/sites.conf:/etc/nginx/conf.d/sites.conf
+      - ./nginx/sites.conf:/etc/nginx/conf.d/sites.conf
       - ./nginx-logs:/var/log/nginx
       - ./ssl:/etc/letsencrypt
       
