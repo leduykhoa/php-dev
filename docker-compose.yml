@@ -1,6 +1,5 @@
 version: "3.5"
 services:
-
   php-dev_nginx:
     container_name: php-dev_nginx
     image: nginx
@@ -11,19 +10,29 @@ services:
       - ${NGINX_PORT_PUBLIC_SSL}:443
     depends_on:
       - php-dev_sql
-      - php-dev_pma
-      - php-dev_main
-      - php-dev
-      - php-dev_p0704
-      - php-dev_p0800
-      - lara-8-0-dev
-      - la-ai
-      - la-dev
+      # - php-dev_redis
+      # - php-dev_p0704
+      # - php-dev_p0800
+      - main
+      - pma
     volumes:
       - ./nginx/configs/sites.conf:/etc/nginx/conf.d/sites.conf
       - ./nginx-logs:/var/log/nginx
-      # - ./ssl:/etc/letsencrypt
-      - ./ssl/certbot/conf:/etc/letsencrypt
+      - ./ssl:/etc/letsencrypt
+      
+  # php-dev_redis:
+  #   container_name: php-dev_redis
+  #   image: redis:${REDIS_VERSION}
+  #   restart: "no"
+  #   command: redis-server --requirepass ${REDIS_PASSWORD}
+  #   networks:
+  #     - php-dev_network
+  #   ports:
+  #     - ${REDIS_PORT}:6379
+  #   volumes:
+  #     - ./redis.conf:/usr/local/etc/redis/redis.conf
+  #   environment:
+  #    - REDIS_REPLICATION_MODE=master
 
   php-dev_sql:
     container_name: php-dev-mysql
@@ -32,6 +41,8 @@ services:
     command: --lower_case_table_names=1 --sql_mode="ON" --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - php-dev_network
+    ports:
+      - 3306:3306
     volumes:
       - ${MYSQL_PATH}/:/var/lib/mysql/
     environment:
@@ -40,44 +51,10 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ALLOW_EMPTY_PASSWORD: ${MYSQL_ALLOW_EMPTY_PASSWORD}
-      MYSQL_HOST: 0.0.0.0
-      
-  php-dev_pma:
-    container_name: php-dev_pma
-    image: phpmyadmin:5.2.0-apache
-    networks:
-      - php-dev_network
-    volumes:
-      - ./config.inc.php:/etc/phpmyadmin/config.inc.php
-    environment:
-      - PMA_ARBITRARY=1
-      - MAX_EXECUTION_TIME=18000
-      - MEMORY_LIMIT=1024M
-      - UPLOAD_LIMIT=1024M
+      MYSQL_HOST: 0.0.0.0  
 
-  php-dev:
-    container_name: php-dev
-    build:
-      context: "./apache/"
-      args:
-        PHP_VERSION: ${PHP_VERSION}
-    networks:
-      - php-dev_network
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    volumes:
-      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf      
-      - ./ssl/certbot/conf:/etc/letsencrypt
-      - ./apache-logs:/var/log/apache
-      # - ./www:/var/www/html
-      - /working/www:/var/www/html
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-
-  php-dev_main:
-    container_name: php-dev-main
+  main:
+    container_name: main
     networks:
       - php-dev_network
     build:
@@ -89,171 +66,55 @@ services:
       XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
     volumes:
       - ./php0801/apache.conf:/etc/apache2/mods-enabled/apache.conf
-      - ./ssl/certbot/conf:/etc/letsencrypt  
-      # - ./www:/var/www/html
-      - /working/www:/var/www/html
-  
-  php-dev_p0800:
-    container_name: p0800
+      - ./ssl:/etc/letsencrypt      
+      - ./www:/var/www/html
+    
+  pma:
+    container_name: pma
+    image: phpmyadmin:5.2.0-apache
     networks:
       - php-dev_network
-    build:
-      context: "./php0800/"
-    restart: "no"
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
     volumes:
-      - ./php0800/apache.conf:/etc/apache2/mods-enabled/apache.conf
-      - ./ssl/certbot/conf:/etc/letsencrypt  
-      # - ./www:/var/www/html
-      - /working/www:/var/www/html
+      - ./config.inc.php:/etc/phpmyadmin/config.inc.php
+    environment:
+      - PMA_ARBITRARY=1
+      - MAX_EXECUTION_TIME=18000
+      - MEMORY_LIMIT=1024M
+      - UPLOAD_LIMIT=1024M
 
-  php-dev_p0704:
-    container_name: p0704
-    networks:
-      - php-dev_network
-    build:
-      context: "./php0704/"
-    restart: "no"
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-    volumes:
-      - ./php0704/apache.conf:/etc/apache2/mods-enabled/apache.conf
-      - ./ssl/certbot/conf:/etc/letsencrypt  
-      # - ./www:/var/www/html
-      - /working/www:/var/www/html
-  
+  # php-dev_p0800:
+  #   container_name: p0800
+  #   networks:
+  #     - php-dev_network
+  #   build:
+  #     context: "./php0800/"
+  #   restart: "no"
+  #   working_dir: /var/www/html
+  #   environment:
+  #     XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+  #     XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+  #   volumes:
+  #     - ./php0800/apache.conf:/etc/apache2/mods-enabled/apache.conf
+  #     - ./ssl:/etc/letsencrypt
+  #     # - ./www:/var/www/html
 
-  lara-8-0-dev:
-    container_name: lara-8-0-dev
-    build:
-      context: "./apache/"
-      args:
-        PHP_VERSION: ${PHP_VERSION}
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    networks:
-      - php-dev_network
-    volumes:
-      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf      
-      - ./ssl/certbot/conf:/etc/letsencrypt
-      - ./apache-logs:/var/log/apache
-      - /working/www/laravel/lara-8-0-dev:/var/www/html
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-      DB_HOST: php-dev-mysql
-      DB_PORT: 3306
-      DB_DATABASE: lara-8-0-dev
-      DB_USERNAME: root
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-
-  la-ai:
-    container_name: la-ai
-    build:
-      context: "./apache/"
-      args:
-        PHP_VERSION: ${PHP_VERSION}
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    networks:
-      - php-dev_network
-    volumes:
-      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf      
-      - ./ssl/certbot/conf:/etc/letsencrypt
-      - ./apache-logs:/var/log/apache
-      - /working/www/laravel/la-ai:/var/www/html
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-      DB_HOST: php-dev-mysql
-      DB_PORT: 3306
-      DB_DATABASE: la-ai
-      DB_USERNAME: root
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-  la-dev:
-    container_name: la-dev
-    build:
-      context: "./apache/"
-      args:
-        PHP_VERSION: ${PHP_VERSION}
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    networks:
-      - php-dev_network
-    volumes:
-      - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf      
-      - ./ssl/certbot/conf:/etc/letsencrypt
-      - ./apache-logs:/var/log/apache
-      - /working/www/laravel/la-dev:/var/www/html
-    working_dir: /var/www/html
-    environment:
-      XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-      XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-      DB_HOST: php-dev-mysql
-      DB_PORT: 3306
-      DB_DATABASE: la-dev
-      DB_USERNAME: root
-      DB_PASSWORD: ${MYSQL_PASSWORD}
+  # php-dev_p0704:
+  #   container_name: p0704
+  #   networks:
+  #     - php-dev_network
+  #   build:
+  #     context: "./php0704/"
+  #   restart: "no"
+  #   working_dir: /var/www/html
+  #   environment:
+  #     XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
+  #     XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
+  #   volumes:
+  #     - ./php0704/apache.conf:/etc/apache2/mods-enabled/apache.conf
+  #     - ./ssl:/etc/letsencrypt
+  #     # - ./www:/var/www/html
 
 networks:
   php-dev_network:
     external:
-      # name: php_dev_network
-      name: os_main_network_global
-
-
-
-  # la-ai:
-  #   container_name: la-ai
-  #   build:
-  #     context: "./apache/"
-  #     args:
-  #       PHP_VERSION: ${PHP_VERSION}
-  #   extra_hosts:
-  #     - 'host.docker.internal:host-gateway'
-  #   networks:
-  #     - php-dev_network
-  #   volumes:
-  #     - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf
-  #     - ./www/la-ai:/var/www/html
-  #     - ./apache-logs:/var/log/apache
-  #   working_dir: /var/www/html
-  #   environment:
-  #     XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-  #     XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-  #     DB_HOST: php-dev-mysql
-  #     DB_PORT: 3306
-  #     DB_DATABASE: la-ai
-  #     DB_USERNAME: root
-  #     DB_PASSWORD: ${MYSQL_PASSWORD}
-
-  # la-dev:
-  #   container_name: la-dev
-  #   build:
-  #     context: "./apache/"
-  #     args:
-  #       PHP_VERSION: ${PHP_VERSION}
-  #   extra_hosts:
-  #     - 'host.docker.internal:host-gateway'
-  #   networks:
-  #     - php-dev_network
-  #   volumes:
-  #     - ./apache/apache.conf:/etc/apache2/mods-enabled/apache.conf
-  #     - ./www/la-dev:/var/www/html
-  #     - ./apache-logs:/var/log/apache
-  #   working_dir: /var/www/html
-  #   environment:
-  #     XDEBUG_CONFIG_CLIENT_HOST: ${XDEBUG_CONFIG_CLIENT_HOST}
-  #     XDEBUG_CONFIG_CLIENT_PORT: ${XDEBUG_CONFIG_CLIENT_PORT}
-  #     DB_HOST: php-dev-mysql
-  #     DB_PORT: 3306
-  #     DB_DATABASE: la-dev
-  #     DB_USERNAME: root
-  #     DB_PASSWORD: ${MYSQL_PASSWORD}
+      name: php_dev_network

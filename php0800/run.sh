@@ -34,8 +34,8 @@ done
 echo 'ServerName 127.0.0.1' >> /etc/apache2/apache2.conf
 echo "AllowEncodedSlashes On" >> /etc/apache2/apache2.conf
 
-sed -ri 's/\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem/\/etc\/letsencrypt\/ssl-cert-os-main.pem/g' /etc/apache2/sites-available/default-ssl.conf
-sed -ri 's/\/etc\/ssl\/private\/ssl-cert-snakeoil.key/\/etc\/letsencrypt\/ssl-cert-os-main.key/g' /etc/apache2/sites-available/default-ssl.conf
+sed -ri 's/\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem/\/etc\/letsencrypt\/web-fast.com.crt/g' /etc/apache2/sites-available/default-ssl.conf
+sed -ri 's/\/etc\/ssl\/private\/ssl-cert-snakeoil.key/\/etc\/letsencrypt\/web-fast.com.key/g' /etc/apache2/sites-available/default-ssl.conf
 a2ensite default-ssl
 
 service apache2 reload
